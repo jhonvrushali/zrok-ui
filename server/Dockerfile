@@ -1,20 +1,15 @@
-# Stage 1: Build TypeScript
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build 2>/dev/null || npx tsc --outDir dist 2>/dev/null || true
-
-# Stage 2: Run compiled JS
+# Single stage: run directly with ts-node (simpler & reliable)
 FROM node:20-alpine
 WORKDIR /app
+
+# Install dependencies
 COPY package*.json ./
-RUN npm install --omit=dev
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src ./src
+RUN npm install
+
+# Copy source code
+COPY . .
 
 EXPOSE 5001
 
-# Run with ts-node for simplicity (can switch to compiled JS in production)
-CMD ["npx", "ts-node", "src/index.ts"]
+# Run TypeScript directly with ts-node
+CMD ["npx", "ts-node", "--transpile-only", "src/index.ts"]
