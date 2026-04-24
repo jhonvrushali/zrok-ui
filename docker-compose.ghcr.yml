@@ -22,7 +22,7 @@ services:
 
   # ── API Server (Pre-built from GHCR) ────────────────────
   zrok-server:
-    image: ghcr.io/${GITHUB_USERNAME:-your-github-username}/zrok-server:latest
+    image: ghcr.io/jhonvrushali/zrok-server:latest
     container_name: zrok-server
     restart: unless-stopped
     environment:
@@ -39,7 +39,7 @@ services:
 
   # ── Dashboard (Pre-built from GHCR) ─────────────────────
   zrok-dashboard:
-    image: ghcr.io/${GITHUB_USERNAME:-your-github-username}/zrok-dashboard:latest
+    image: ghcr.io/jhonvrushali/zrok-dashboard:latest
     container_name: zrok-dashboard
     restart: unless-stopped
     ports:
