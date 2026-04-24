@@ -1,0 +1,57 @@
+# ============================================================
+# Zrok - One-Click Deploy docker-compose.yml
+# Usage:
+#   1. Copy this file to your server
+#   2. Create a .env file (see .env.example)
+#   3. Run: docker compose up -d
+# ============================================================
+
+version: '3.9'
+
+services:
+
+  # ── Redis ────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: zrok-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - zrok-net
+
+  # ── API Server (Pre-built from GHCR) ────────────────────
+  zrok-server:
+    image: ghcr.io/${GITHUB_USERNAME:-your-github-username}/zrok-server:latest
+    container_name: zrok-server
+    restart: unless-stopped
+    environment:
+      PORT: 5001
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      REDIS_URL: redis://redis:6379
+      BASE_DOMAIN: ${BASE_DOMAIN:-localhost}
+    ports:
+      - "5001:5001"
+    depends_on:
+      - redis
+    networks:
+      - zrok-net
+
+  # ── Dashboard (Pre-built from GHCR) ─────────────────────
+  zrok-dashboard:
+    image: ghcr.io/${GITHUB_USERNAME:-your-github-username}/zrok-dashboard:latest
+    container_name: zrok-dashboard
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - zrok-server
+    networks:
+      - zrok-net
+
+volumes:
+  redis-data:
+
+networks:
+  zrok-net:
+    driver: bridge

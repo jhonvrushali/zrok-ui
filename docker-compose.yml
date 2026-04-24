@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+
+  # ── Redis (Token & Tunnel Storage) ─────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: zrok-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    networks:
+      - zrok-net
+
+  # ── Node.js API Server ──────────────────────────────────
+  zrok-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: zrok-server
+    restart: unless-stopped
+    environment:
+      PORT: 5001
+      JWT_SECRET: ${JWT_SECRET:-super_secret_zrok_key_change_in_production}
+      REDIS_URL: redis://redis:6379
+      MAX_TUNNELS_PER_TOKEN: 5
+      BASE_DOMAIN: ${BASE_DOMAIN:-localhost}
+    ports:
+      - "5001:5001"
+    depends_on:
+      - redis
+    networks:
+      - zrok-net
+
+  # ── React Dashboard (Nginx) ─────────────────────────────
+  zrok-dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: zrok-dashboard
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - zrok-server
+    networks:
+      - zrok-net
+
+volumes:
+  redis-data:
+
+networks:
+  zrok-net:
+    driver: bridge
